@@ -1,0 +1,48 @@
+{
+  "version": "2026-03-17",
+  "models": {
+    "gpt-4o": {
+      "input_per_1k_tokens": 0.0025,
+      "output_per_1k_tokens": 0.01
+    },
+    "gpt-4o-mini": {
+      "input_per_1k_tokens": 0.00015,
+      "output_per_1k_tokens": 0.0006
+    },
+    "gpt-4-turbo": {
+      "input_per_1k_tokens": 0.01,
+      "output_per_1k_tokens": 0.03
+    },
+    "gpt-3.5-turbo": {
+      "input_per_1k_tokens": 0.0005,
+      "output_per_1k_tokens": 0.0015
+    },
+    "claude-opus-4-6": {
+      "input_per_1k_tokens": 0.015,
+      "output_per_1k_tokens": 0.075
+    },
+    "claude-sonnet-4-6": {
+      "input_per_1k_tokens": 0.003,
+      "output_per_1k_tokens": 0.015
+    },
+    "claude-haiku-4-5": {
+      "input_per_1k_tokens": 0.0008,
+      "output_per_1k_tokens": 0.004
+    },
+    "llama4-scout": {
+      "input_per_1k_tokens": 0.0,
+      "output_per_1k_tokens": 0.0,
+      "note": "local model via Ollama"
+    },
+    "qwen3:14b": {
+      "input_per_1k_tokens": 0.0,
+      "output_per_1k_tokens": 0.0,
+      "note": "local model via Ollama"
+    },
+    "mistral-7b": {
+      "input_per_1k_tokens": 0.0,
+      "output_per_1k_tokens": 0.0,
+      "note": "local model via Ollama"
+    }
+  }
+}

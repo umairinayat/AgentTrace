@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-sdk:
+    name: Lint & Type Check (SDK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          cd sdk
+          pip install -e ".[dev]"
+      - name: Lint with ruff
+        run: |
+          cd sdk
+          ruff check .
+      - name: Type check with mypy
+        run: |
+          cd sdk
+          mypy agenttrace/
+
+  test-sdk:
+    name: Test (SDK)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          cd sdk
+          pip install -e ".[dev]"
+      - name: Run tests
+        run: |
+          cd sdk
+          pytest -v
+
+  lint-collector:
+    name: Lint & Type Check (Collector)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          cd collector
+          pip install -e ".[dev]"
+      - name: Lint with ruff
+        run: |
+          cd collector
+          ruff check .
+      - name: Type check with mypy
+        run: |
+          cd collector
+          mypy app/
+
+  test-collector:
+    name: Test (Collector)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          cd collector
+          pip install -e ".[dev]"
+      - name: Run tests
+        run: |
+          cd collector
+          pytest -v
+
+  lint-dashboard:
+    name: Lint (Dashboard)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: |
+          cd dashboard
+          npm ci
+      - name: Type check
+        run: |
+          cd dashboard
+          npx tsc --noEmit
+      - name: Lint
+        run: |
+          cd dashboard
+          npx eslint src/

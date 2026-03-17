@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git clone:*)",
+      "Read(//c/Users/umair/.claude/skills/gstack/**)",
+      "Bash(./setup)",
+      "Bash(cp -Rf ~/.claude/skills/gstack D:/AgentTrace/.claude/skills/gstack)",
+      "Bash(rm -rf D:/AgentTrace/.claude/skills/gstack/.git)",
+      "Bash(mkdir -p D:/AgentTrace/.claude/skills)",
+      "Bash(pip install:*)",
+      "Bash(pytest -v)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)",
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(grep -l \"requirements\" D:/AgentTrace/docs/*)",
+      "Bash(grep -E \"\\\\.md$|\\\\.yml$|\\\\.yaml$|LICENSE|\\\\.gitignore|docker-compose\")",
+      "Bash(for dir:*)",
+      "Bash(do echo:*)",
+      "Read(//d/AgentTrace/$dir/**)",
+      "Bash(done)",
+      "Bash(/tmp/final_check.sh:*)",
+      "Bash(bash /tmp/final_check.sh)"
+    ]
+  }
+}

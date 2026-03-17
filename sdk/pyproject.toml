@@ -1,0 +1,61 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agenttrace"
+version = "0.1.0"
+description = "Open-source observability for multi-agent AI systems"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "Umair", email = "umair@agenttrace.dev" },
+]
+keywords = ["observability", "tracing", "agents", "llm", "langchain", "langgraph"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: System :: Monitoring",
+]
+dependencies = [
+    "httpx>=0.27",
+    "pydantic>=2.0",
+    "anyio>=4.0",
+]
+
+[project.optional-dependencies]
+langchain = ["langchain>=0.3"]
+langgraph = ["langgraph>=0.2"]
+crewai = ["crewai>=0.80"]
+autogen = ["pyautogen>=0.4"]
+drift = ["sentence-transformers>=3.0", "scipy>=1.13", "numpy>=2.0", "scikit-learn>=1.5"]
+all = ["agenttrace[langchain,langgraph,crewai,autogen,drift]"]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "ruff", "mypy", "httpx", "respx>=0.21"]
+
+[project.urls]
+Homepage = "https://github.com/agenttrace/agenttrace"
+Documentation = "https://agenttrace.github.io/agenttrace"
+Repository = "https://github.com/agenttrace/agenttrace"
+Issues = "https://github.com/agenttrace/agenttrace/issues"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

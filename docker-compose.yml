@@ -1,0 +1,42 @@
+version: "3.9"
+
+services:
+  collector:
+    build: ./collector
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:////data/agenttrace.db
+      - COLLECTOR_HOST=0.0.0.0
+      - COLLECTOR_PORT=8000
+    volumes:
+      - agenttrace_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  drift_detector:
+    build: ./drift-detector
+    environment:
+      - COLLECTOR_URL=http://collector:8000
+      - CHECK_INTERVAL_SECONDS=300
+      - EMBEDDING_MODEL=all-MiniLM-L6-v2
+    depends_on:
+      collector:
+        condition: service_healthy
+    volumes:
+      - agenttrace_data:/data
+
+  dashboard:
+    build: ./dashboard
+    ports:
+      - "3000:80"
+    environment:
+      - VITE_COLLECTOR_URL=http://localhost:8000
+    depends_on:
+      - collector
+
+volumes:
+  agenttrace_data:
