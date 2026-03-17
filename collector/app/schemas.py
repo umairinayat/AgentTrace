@@ -79,6 +79,7 @@ class TraceResponse(BaseModel):
 
     id: str
     name: str
+    agent_name: Optional[str] = None
     started_at: datetime
     ended_at: Optional[datetime] = None
     duration_ms: Optional[float] = None

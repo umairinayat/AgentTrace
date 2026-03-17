@@ -23,6 +23,7 @@ export interface SpanResponse {
 export interface TraceResponse {
   id: string;
   name: string;
+  agent_name: string | null;
   started_at: string;
   ended_at: string | null;
   duration_ms: number | null;

@@ -82,10 +82,15 @@ async def list_traces(
 
     items = []
     for trace in traces:
+        # Derive agent_name from the first span if available
+        agent_name = None
+        if trace.spans:
+            agent_name = trace.spans[0].agent_name
         items.append(
             TraceResponse(
                 id=trace.id,
                 name=trace.name,
+                agent_name=agent_name,
                 started_at=trace.started_at,
                 ended_at=trace.ended_at,
                 duration_ms=trace.duration_ms,

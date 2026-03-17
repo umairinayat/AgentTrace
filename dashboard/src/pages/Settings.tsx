@@ -28,10 +28,14 @@ export default function Settings() {
 
       {/* Collector URL */}
       <Section title="Collector Connection">
+        <label className="mb-1 block text-xs text-gray-500">Collector URL</label>
         <div className="flex gap-2">
           <input
+            id="collector-url"
             type="text"
             className="flex-1 rounded border px-3 py-2 text-sm focus:border-primary focus:outline-none"
+            placeholder="http://localhost:8000"
+            title="Enter the URL of the Collector service"
             value={collectorUrl}
             onChange={(e) => setCollectorUrl(e.target.value)}
           />
@@ -83,10 +87,11 @@ export default function Settings() {
 
       {/* Retention */}
       <Section title="Data Retention">
-        <label className="mb-1 block text-xs text-gray-500">
+        <label className="mb-1 block text-xs text-gray-500" htmlFor="retention-period">
           Auto-delete traces older than
         </label>
         <select
+          id="retention-period"
           className="rounded border px-3 py-2 text-sm focus:border-primary focus:outline-none"
           value={retention}
           onChange={(e) => setRetention(e.target.value)}

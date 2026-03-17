@@ -78,7 +78,7 @@ AgentTrace consists of four components:
 
 ### Docker (recommended)
 ```bash
-git clone https://github.com/agenttrace/agenttrace.git
+git clone https://github.com/umairinayat/agenttrace.git
 cd agenttrace
 docker compose up -d
 pip install agenttrace
@@ -86,7 +86,7 @@ pip install agenttrace
 
 ### From source
 ```bash
-git clone https://github.com/agenttrace/agenttrace.git
+git clone https://github.com/umairinayat/agenttrace.git
 cd agenttrace/sdk
 pip install -e ".[dev]"
 ```

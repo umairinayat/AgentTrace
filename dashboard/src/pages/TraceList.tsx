@@ -49,6 +49,8 @@ export default function TraceList() {
           }
         />
         <select
+          title="Filter by status"
+          aria-label="Filter by status"
           className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-primary focus:outline-none"
           value={filters.status || ''}
           onChange={(e) =>
@@ -109,7 +111,7 @@ export default function TraceList() {
                 onClick={() => navigate(`/traces/${trace.id}`)}
               >
                 <td className="px-4 py-3 font-medium">{trace.name}</td>
-                <td className="px-4 py-3">{trace.name}</td>
+                <td className="px-4 py-3">{trace.agent_name ?? '-'}</td>
                 <td className="px-4 py-3">
                   {new Date(trace.started_at).toLocaleString()}
                 </td>
