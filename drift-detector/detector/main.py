@@ -70,11 +70,14 @@ class DriftDetectorService:
         collector_url: str = "http://localhost:8000",
         check_interval: int = 300,
         embedding_model: str = "all-MiniLM-L6-v2",
+        embedder: Any | None = None,
     ) -> None:
         self._collector_url = collector_url.rstrip("/")
         self._check_interval = check_interval
-        self._builder = BaselineBuilder(embedding_model=embedding_model)
-        self._comparator = DriftComparator(embedding_model=embedding_model)
+        self._builder = BaselineBuilder(embedding_model=embedding_model, embedder=embedder)
+        self._comparator = DriftComparator(
+            embedding_model=embedding_model, embedder=embedder
+        )
         self._alerter = Alerter(
             slack_webhook=os.environ.get("SLACK_WEBHOOK_URL"),
             discord_webhook=os.environ.get("DISCORD_WEBHOOK_URL"),

@@ -78,3 +78,39 @@ class TestAlerter:
             await alerter.send_alert(sample_alert)
 
             mock_client.post.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_email_alert_uses_smtp(self, sample_alert: DriftAlert) -> None:
+        """Email channel should connect to SMTP and send a message."""
+        alerter = Alerter(
+            smtp_host="smtp.example.com",
+            smtp_port=587,
+            smtp_user="user",
+            smtp_password="pass",
+            email_recipient="ops@example.com",
+        )
+        with patch("detector.alerter.smtplib.SMTP") as mock_smtp:
+            # asyncio.to_thread runs the (mocked) sync SMTP in a worker thread.
+            await alerter.send_alert(sample_alert)
+
+            mock_smtp.assert_called_once_with("smtp.example.com", 587)
+            server = mock_smtp.return_value.__enter__.return_value
+            server.starttls.assert_called_once()
+            server.login.assert_called_once_with("user", "pass")
+            server.send_message.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_email_tolerates_no_starttls(self, sample_alert: DriftAlert) -> None:
+        """Alert delivery should not fail when the SMTP server lacks STARTTLS."""
+        alerter = Alerter(
+            smtp_host="smtp.example.com",
+            smtp_port=587,
+            email_recipient="ops@example.com",
+        )
+        import smtplib
+
+        with patch("detector.alerter.smtplib.SMTP") as mock_smtp:
+            server = mock_smtp.return_value.__enter__.return_value
+            server.starttls.side_effect = smtplib.SMTPException("not supported")
+            await alerter.send_alert(sample_alert)  # must not raise
+            server.send_message.assert_called_once()

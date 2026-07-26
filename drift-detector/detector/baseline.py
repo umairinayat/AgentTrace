@@ -20,14 +20,20 @@ class BaselineBuilder:
     for semantic similarity comparison.
     """
 
-    def __init__(self, embedding_model: str = "all-MiniLM-L6-v2") -> None:
+    def __init__(
+        self,
+        embedding_model: str = "all-MiniLM-L6-v2",
+        embedder: Any | None = None,
+    ) -> None:
         """Initialize with the specified embedding model.
 
         Args:
             embedding_model: SentenceTransformer model name (80MB, runs on CPU).
+            embedder: Optional pre-built embedder with an ``encode(texts)``
+                method. Injected in tests to avoid loading the 80MB model.
         """
         self._model_name = embedding_model
-        self._embedder: Any = None
+        self._embedder = embedder
 
     def _get_embedder(self) -> Any:
         """Lazy-load the embedding model."""

@@ -1,8 +1,8 @@
 """initial schema
 
-Revision ID: 7ba49989aaaf
+Revision ID: 6f6a66300caf
 Revises: 
-Create Date: 2026-07-26 05:29:29.519163
+Create Date: 2026-07-26 05:45:06.830946
 """
 from collections.abc import Sequence
 
@@ -12,7 +12,7 @@ from sqlalchemy.dialects import sqlite
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = '7ba49989aaaf'
+revision: str = '6f6a66300caf'
 down_revision: str | None = None
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
@@ -25,16 +25,14 @@ def upgrade() -> None:
     sa.Column('agent_name', sa.String(), nullable=False),
     sa.Column('detected_at', sa.DateTime(), nullable=False),
     sa.Column('alert_type', sa.String(), nullable=False),
-    sa.Column('severity', sa.String(), nullable=True),
+    sa.Column('severity', sa.String(), nullable=False),
     sa.Column('score', sa.Float(), nullable=True),
     sa.Column('threshold', sa.Float(), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),
-    sa.Column('resolved', sa.Integer(), nullable=True),
+    sa.Column('resolved', sa.Integer(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(
-        op.f('ix_drift_alerts_agent_name'), 'drift_alerts', ['agent_name'], unique=False
-    )
+    op.create_index(op.f('ix_drift_alerts_agent_name'), 'drift_alerts', ['agent_name'], unique=False)
     op.create_table('drift_baselines',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('agent_name', sa.String(), nullable=False),
@@ -48,21 +46,14 @@ def upgrade() -> None:
     sa.Column('tool_call_distribution', sqlite.JSON(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(
-        op.f('ix_drift_baselines_agent_name'), 'drift_baselines', ['agent_name'], unique=False
-    )
+    op.create_index(op.f('ix_drift_baselines_agent_name'), 'drift_baselines', ['agent_name'], unique=False)
     op.create_table('drift_rebuild_requests',
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('agent_name', sa.String(), nullable=False),
     sa.Column('requested_at', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index(
-        op.f('ix_drift_rebuild_requests_agent_name'),
-        'drift_rebuild_requests',
-        ['agent_name'],
-        unique=False,
-    )
+    op.create_index(op.f('ix_drift_rebuild_requests_agent_name'), 'drift_rebuild_requests', ['agent_name'], unique=False)
     op.create_table('traces',
     sa.Column('id', sa.String(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
@@ -71,7 +62,7 @@ def upgrade() -> None:
     sa.Column('duration_ms', sa.Float(), nullable=True),
     sa.Column('total_tokens', sa.Integer(), nullable=True),
     sa.Column('total_cost_usd', sa.Float(), nullable=True),
-    sa.Column('status', sa.String(), nullable=True),
+    sa.Column('status', sa.String(), nullable=False),
     sa.Column('metadata', sqlite.JSON(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )

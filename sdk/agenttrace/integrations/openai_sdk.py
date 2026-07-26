@@ -32,7 +32,7 @@ def patch_openai() -> None:
     """
     try:
         from openai.resources.chat import (
-            completions as _completions,  # type: ignore[import-untyped]
+            completions as _completions,
         )
     except ImportError:
         logger.warning("openai is not installed — skipping patch")
@@ -107,6 +107,6 @@ def patch_openai() -> None:
             )
             _tracer._emit(event)
 
-    cls.create = traced_create
+    cls.create = traced_create  # type: ignore[method-assign]
     cls._agenttrace_patched = True  # type: ignore[attr-defined]
     logger.info("OpenAI ChatCompletions.create patched for AgentTrace")

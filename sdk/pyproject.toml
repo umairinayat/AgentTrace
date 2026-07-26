@@ -55,6 +55,10 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 python_version = "3.11"
 strict = true
 ignore_missing_imports = true
+# Integrations monkey-patch optional frameworks (langchain, crewai, autogen,
+# openai, ...) that may or may not be installed. Their `type: ignore` comments
+# are meaningful when a framework is present and unused when it isn't.
+warn_unused_ignores = false
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

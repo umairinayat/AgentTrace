@@ -7,99 +7,52 @@ on:
     branches: [main]
 
 jobs:
-  lint-sdk:
-    name: Lint & Type Check (SDK)
+  python:
+    name: ${{ matrix.pkg }} (ruff + mypy + pytest)
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pkg: [sdk, collector, drift-detector]
+    defaults:
+      run:
+        working-directory: ${{ matrix.pkg }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install dependencies
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Ruff
+        run: ruff check .
+      - name: Mypy
+        # drift-detector's mypy path is detector/; others are app/ or agenttrace/
         run: |
-          cd sdk
-          pip install -e ".[dev]"
-      - name: Lint with ruff
-        run: |
-          cd sdk
-          ruff check .
-      - name: Type check with mypy
-        run: |
-          cd sdk
-          mypy agenttrace/
+          if [ -d detector ]; then mypy detector/;
+          elif [ -d app ]; then mypy app/;
+          else mypy agenttrace/;
+          fi
+      - name: Pytest
+        run: pytest -q
 
-  test-sdk:
-    name: Test (SDK)
+  dashboard:
+    name: Dashboard (tsc + build)
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install dependencies
-        run: |
-          cd sdk
-          pip install -e ".[dev]"
-      - name: Run tests
-        run: |
-          cd sdk
-          pytest -v
-
-  lint-collector:
-    name: Lint & Type Check (Collector)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install dependencies
-        run: |
-          cd collector
-          pip install -e ".[dev]"
-      - name: Lint with ruff
-        run: |
-          cd collector
-          ruff check .
-      - name: Type check with mypy
-        run: |
-          cd collector
-          mypy app/
-
-  test-collector:
-    name: Test (Collector)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install dependencies
-        run: |
-          cd collector
-          pip install -e ".[dev]"
-      - name: Run tests
-        run: |
-          cd collector
-          pytest -v
-
-  lint-dashboard:
-    name: Lint (Dashboard)
-    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Install dependencies
-        run: |
-          cd dashboard
-          npm ci
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+      - name: Install
+        run: npm ci
       - name: Type check
-        run: |
-          cd dashboard
-          npx tsc --noEmit
-      - name: Lint
-        run: |
-          cd dashboard
-          npx eslint src/
+        run: npx tsc --noEmit
+      - name: Build
+        run: npm run build

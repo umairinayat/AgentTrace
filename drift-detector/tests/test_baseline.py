@@ -10,9 +10,12 @@ from detector.baseline import BaselineBuilder
 class TestBaselineBuilder:
     """Test BaselineBuilder functionality."""
 
-    def test_build_creates_baseline(self) -> None:
+    def test_build_creates_baseline(self, fake_embedder) -> None:
         """Builder should create a valid baseline from response data."""
-        builder = BaselineBuilder()
+        fake_embedder.set("Hello world", [1.0, 0.0, 0.0, 0.0])
+        fake_embedder.set("How are you", [0.0, 1.0, 0.0, 0.0])
+        fake_embedder.set("Fine thanks", [0.0, 0.0, 1.0, 0.0])
+        builder = BaselineBuilder(embedder=fake_embedder)
         baseline = builder.build(
             agent_name="test_agent",
             response_texts=["Hello world", "How are you", "Fine thanks"],
@@ -26,7 +29,7 @@ class TestBaselineBuilder:
         assert baseline.avg_response_length > 0
         assert baseline.avg_latency_ms == pytest.approx(123.33, abs=0.1)
         assert baseline.avg_token_count == pytest.approx(55.0)
-        assert len(baseline.embedding_centroid) == 384  # MiniLM-L6-v2
+        assert len(baseline.embedding_centroid) == fake_embedder._dim
         assert len(baseline.response_length_distribution) == 3
         assert "search" in baseline.tool_call_distribution
         assert baseline.tool_call_distribution["search"] == pytest.approx(2 / 3)
@@ -43,9 +46,10 @@ class TestBaselineBuilder:
                 tool_calls=[],
             )
 
-    def test_build_no_tools(self) -> None:
+    def test_build_no_tools(self, fake_embedder) -> None:
         """Builder should handle missing tool calls."""
-        builder = BaselineBuilder()
+        fake_embedder.set("Hello world", [1.0, 0.0, 0.0, 0.0])
+        builder = BaselineBuilder(embedder=fake_embedder)
         baseline = builder.build(
             agent_name="test_agent",
             response_texts=["Hello world"],

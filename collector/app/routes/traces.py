@@ -71,9 +71,9 @@ async def list_traces(
     }
     sort_col = sort_column_map.get(sort_by, Trace.started_at)
     if sort_order == "desc":
-        query = query.order_by(sort_col.desc())  # type: ignore[union-attr]
+        query = query.order_by(sort_col.desc())
     else:
-        query = query.order_by(sort_col.asc())  # type: ignore[union-attr]
+        query = query.order_by(sort_col.asc())
 
     # Pagination
     offset = (page - 1) * page_size

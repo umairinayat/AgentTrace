@@ -25,9 +25,13 @@ class DriftComparator:
     4. Tool call pattern changes (relative change)
     """
 
-    def __init__(self, embedding_model: str = "all-MiniLM-L6-v2") -> None:
+    def __init__(
+        self,
+        embedding_model: str = "all-MiniLM-L6-v2",
+        embedder: Any | None = None,
+    ) -> None:
         self._model_name = embedding_model
-        self._embedder: Any = None
+        self._embedder = embedder
 
     def _get_embedder(self) -> Any:
         """Lazy-load the embedding model."""

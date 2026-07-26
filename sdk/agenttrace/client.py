@@ -79,7 +79,7 @@ class TraceClient:
             )
             response.raise_for_status()
             result = response.json()
-            accepted = result.get("accepted", len(spans))
+            accepted = int(result.get("accepted", len(spans)))
             logger.debug("Collector accepted %d spans", accepted)
             return accepted
         except (httpx.HTTPError, httpx.ConnectError, OSError) as exc:
