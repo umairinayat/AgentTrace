@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -15,7 +15,7 @@ from detector.models import DriftAlert
 def sample_alert() -> DriftAlert:
     return DriftAlert(
         agent_name="test_agent",
-        detected_at=datetime.now(timezone.utc),
+        detected_at=datetime.now(UTC),
         alert_type="semantic",
         severity="warning",
         score=0.25,

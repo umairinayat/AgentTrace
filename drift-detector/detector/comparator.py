@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import numpy as np
@@ -116,7 +116,9 @@ class DriftComparator:
         # Check 3: Token count anomaly
         if recent_token_counts and baseline.avg_token_count > 0:
             recent_avg_tokens = float(np.mean(recent_token_counts))
-            pct_change = abs(recent_avg_tokens - baseline.avg_token_count) / baseline.avg_token_count
+            pct_change = (
+                abs(recent_avg_tokens - baseline.avg_token_count) / baseline.avg_token_count
+            )
             token_pct_change = float(pct_change)
 
             if pct_change > config.token_change_threshold:
@@ -181,7 +183,7 @@ class DriftComparator:
 
         return DriftReport(
             agent_name=agent_name,
-            checked_at=datetime.now(timezone.utc),
+            checked_at=datetime.now(UTC),
             alerts=alerts,
             is_drifted=len(alerts) > 0,
             cosine_distance=cosine_dist,

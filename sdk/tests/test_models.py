@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from agenttrace.models import BatchSpanRequest, SpanEvent, TraceContext
 
@@ -28,8 +28,8 @@ class TestSpanEvent:
             parent_span_id="span-parent",
             agent_name="research_agent",
             event_type="llm_call",
-            started_at=datetime.now(timezone.utc),
-            ended_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
+            ended_at=datetime.now(UTC),
             latency_ms=150.5,
             model="gpt-4o",
             prompt_tokens=100,

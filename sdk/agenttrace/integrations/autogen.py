@@ -6,7 +6,7 @@ import functools
 import logging
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from agenttrace.context import get_current_context
@@ -62,7 +62,10 @@ def patch_autogen() -> None:
         input_summary = None
         if messages:
             last_msg = messages[-1] if isinstance(messages, list) else messages
-            input_summary = str(last_msg.get("content", ""))[:500] if isinstance(last_msg, dict) else str(last_msg)[:500]
+            if isinstance(last_msg, dict):
+                input_summary = str(last_msg.get("content", ""))[:500]
+            else:
+                input_summary = str(last_msg)[:500]
 
         start = time.monotonic()
         error_msg = None
@@ -83,7 +86,7 @@ def patch_autogen() -> None:
                 parent_span_id=ctx.parent_span_id if ctx else None,
                 agent_name=str(agent_name),
                 event_type="llm_call",
-                started_at=datetime.now(timezone.utc),
+                started_at=datetime.now(UTC),
                 latency_ms=latency,
                 input_data={"messages": input_summary},
                 output_data={"reply": output},

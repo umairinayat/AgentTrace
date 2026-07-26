@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.sqlite import JSON
@@ -22,7 +22,7 @@ class Trace(Base):
 
     id = Column(String, primary_key=True)
     name = Column(String, nullable=False)
-    started_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    started_at = Column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
     ended_at = Column(DateTime, nullable=True)
     duration_ms = Column(Float, nullable=True)
     total_tokens = Column(Integer, nullable=True)
@@ -66,7 +66,7 @@ class DriftBaseline(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     agent_name = Column(String, nullable=False, index=True)
-    built_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    built_at = Column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
     n_samples = Column(Integer, nullable=False)
     avg_response_length = Column(Float, nullable=True)
     avg_latency_ms = Column(Float, nullable=True)
@@ -83,7 +83,7 @@ class DriftAlert(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     agent_name = Column(String, nullable=False, index=True)
-    detected_at = Column(DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
+    detected_at = Column(DateTime, nullable=False, default=lambda: datetime.now(UTC))
     alert_type = Column(String, nullable=False)
     severity = Column(String, default="warning")
     score = Column(Float, nullable=True)
@@ -100,5 +100,5 @@ class DriftRebuildRequest(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     agent_name = Column(String, nullable=False, index=True)
     requested_at = Column(
-        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+        DateTime, nullable=False, default=lambda: datetime.now(UTC)
     )

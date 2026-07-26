@@ -5,8 +5,6 @@ from __future__ import annotations
 import uuid
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from agenttrace.integrations.langchain import AgentTraceCallback
 
 
@@ -58,7 +56,9 @@ class TestAgentTraceCallback:
 
         # Simulate response
         response = MagicMock()
-        response.llm_output = {"token_usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30}}
+        response.llm_output = {
+            "token_usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30}
+        }
         response.generations = [[MagicMock(text="World")]]
 
         cb.on_llm_end(response=response, run_id=run_id)

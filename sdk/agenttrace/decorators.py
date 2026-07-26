@@ -5,7 +5,8 @@ from __future__ import annotations
 import asyncio
 import functools
 import logging
-from typing import Any, Callable, Optional, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +14,8 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 
 def trace_agent(
-    name: Optional[str] = None,
-    tracer: Optional[Any] = None,
+    name: str | None = None,
+    tracer: Any | None = None,
 ) -> Callable[[F], F]:
     """Standalone decorator to trace an agent function.
 

@@ -9,12 +9,11 @@ from __future__ import annotations
 import logging
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from agenttrace.context import get_current_context
 from agenttrace.models import SpanEvent
-from agenttrace.pricing import estimate_cost
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +98,7 @@ def patch_openai_agents() -> None:
                 parent_span_id=ctx.parent_span_id if ctx else None,
                 agent_name=agent_name,
                 event_type="agent_end",
-                started_at=datetime.now(timezone.utc),
+                started_at=datetime.now(UTC),
                 latency_ms=latency,
                 model=model,
                 input_data={"input": input_text},

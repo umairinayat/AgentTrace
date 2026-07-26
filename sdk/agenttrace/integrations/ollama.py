@@ -5,11 +5,12 @@ Intercepts HTTP calls to the Ollama API to capture LLM call spans.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -60,10 +61,8 @@ class OllamaTracingTransport(httpx.BaseTransport):
         # Parse request body
         body: dict[str, Any] = {}
         if request.content:
-            try:
+            with contextlib.suppress(json.JSONDecodeError, UnicodeDecodeError):
                 body = json.loads(request.content)
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                pass
 
         # Streaming responses cannot be read here without consuming the caller's
         # stream, so we skip response capture for streamed requests.
@@ -118,7 +117,7 @@ class OllamaTracingTransport(httpx.BaseTransport):
                 parent_span_id=ctx.parent_span_id if ctx else None,
                 agent_name="ollama_agent",
                 event_type="llm_call",
-                started_at=datetime.now(timezone.utc),
+                started_at=datetime.now(UTC),
                 latency_ms=latency,
                 model=model,
                 prompt_tokens=prompt_tokens,

@@ -5,11 +5,10 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-_PRICING_DATA: Optional[dict[str, object]] = None
+_PRICING_DATA: dict[str, object] | None = None
 
 
 def _load_pricing() -> dict[str, object]:
@@ -30,10 +29,10 @@ def _load_pricing() -> dict[str, object]:
 
 
 def estimate_cost(
-    model: Optional[str],
-    prompt_tokens: Optional[int],
-    completion_tokens: Optional[int],
-) -> Optional[float]:
+    model: str | None,
+    prompt_tokens: int | None,
+    completion_tokens: int | None,
+) -> float | None:
     """Estimate the cost of an LLM call based on model pricing.
 
     Returns None if model is not found in pricing table or tokens are missing.

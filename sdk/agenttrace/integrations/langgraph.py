@@ -4,24 +4,22 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import time
 import uuid
-from datetime import datetime, timezone
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable, Optional
+from typing import Any
 
 from agenttrace.context import get_current_context
-from agenttrace.models import SpanEvent, TraceContext
 
 logger = logging.getLogger(__name__)
 
 _patched = False
-_original_add_node: Optional[Callable[..., Any]] = None
+_original_add_node: Callable[..., Any] | None = None
 
 
 def patch_langgraph(
     agent_name: str = "langgraph_agent",
-    trace_id: Optional[str] = None,
+    trace_id: str | None = None,
 ) -> None:
     """Patch LangGraph StateGraph to automatically trace all node executions.
 
@@ -61,7 +59,7 @@ def _wrap_node(
     func: Callable[..., Any],
     node_name: str,
     agent_name: str,
-    trace_id: Optional[str],
+    trace_id: str | None,
 ) -> Callable[..., Any]:
     """Wrap a LangGraph node function with span tracing."""
 

@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import smtplib
 from email.mime.text import MIMEText
-from typing import Optional
 
 import httpx
 
@@ -20,14 +18,14 @@ class Alerter:
 
     def __init__(
         self,
-        slack_webhook: Optional[str] = None,
-        discord_webhook: Optional[str] = None,
-        custom_webhook: Optional[str] = None,
-        smtp_host: Optional[str] = None,
+        slack_webhook: str | None = None,
+        discord_webhook: str | None = None,
+        custom_webhook: str | None = None,
+        smtp_host: str | None = None,
         smtp_port: int = 587,
-        smtp_user: Optional[str] = None,
-        smtp_password: Optional[str] = None,
-        email_recipient: Optional[str] = None,
+        smtp_user: str | None = None,
+        smtp_password: str | None = None,
+        email_recipient: str | None = None,
     ) -> None:
         self._slack_webhook = slack_webhook
         self._discord_webhook = discord_webhook

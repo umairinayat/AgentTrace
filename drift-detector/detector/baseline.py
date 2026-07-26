@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import numpy as np
@@ -86,7 +86,7 @@ class BaselineBuilder:
 
         baseline = BaselineRecord(
             agent_name=agent_name,
-            built_at=datetime.now(timezone.utc),
+            built_at=datetime.now(UTC),
             n_samples=n_samples,
             avg_response_length=avg_response_length,
             avg_latency_ms=avg_latency,

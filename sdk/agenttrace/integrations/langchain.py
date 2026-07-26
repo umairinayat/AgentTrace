@@ -5,11 +5,11 @@ from __future__ import annotations
 import logging
 import time
 import uuid
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
-from agenttrace.context import get_current_context, set_current_context
-from agenttrace.models import SpanEvent, TraceContext
+from agenttrace.context import get_current_context
+from agenttrace.models import SpanEvent
 from agenttrace.pricing import estimate_cost
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,7 @@ class AgentTraceCallback:
     def __init__(
         self,
         agent_name: str = "langchain_agent",
-        trace_id: Optional[str] = None,
+        trace_id: str | None = None,
     ) -> None:
         self.agent_name = agent_name
         self.trace_id = trace_id or str(uuid.uuid4())
@@ -46,7 +46,7 @@ class AgentTraceCallback:
         serialized: dict[str, Any],
         prompts: list[str],
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Record the start of an LLM call."""
@@ -64,7 +64,7 @@ class AgentTraceCallback:
         self,
         response: Any,
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Record the end of an LLM call with response and token counts."""
@@ -101,7 +101,7 @@ class AgentTraceCallback:
             parent_span_id=ctx.parent_span_id if ctx else None,
             agent_name=self.agent_name,
             event_type="llm_call",
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
             latency_ms=latency,
             model=model,
             prompt_tokens=prompt_tokens,
@@ -119,7 +119,7 @@ class AgentTraceCallback:
         self,
         error: BaseException,
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Record an LLM error."""
@@ -144,7 +144,7 @@ class AgentTraceCallback:
         serialized: dict[str, Any],
         input_str: str,
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Record the start of a tool call."""
@@ -156,7 +156,7 @@ class AgentTraceCallback:
         self,
         output: str,
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Record the end of a tool call."""
@@ -182,7 +182,7 @@ class AgentTraceCallback:
         self,
         error: BaseException,
         *,
-        run_id: Optional[Any] = None,
+        run_id: Any | None = None,
         **kwargs: Any,
     ) -> None:
         """Record a tool error."""

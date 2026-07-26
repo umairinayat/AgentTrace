@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
@@ -71,7 +71,7 @@ async def ingest_spans(
         # Update trace aggregates
         if span_data.event_type in ("agent_end", "error"):
             trace.status = "error" if span_data.event_type == "error" else "completed"
-            trace.ended_at = span_data.ended_at or datetime.now(timezone.utc)
+            trace.ended_at = span_data.ended_at or datetime.now(UTC)
             if trace.started_at and trace.ended_at:
                 delta = trace.ended_at - trace.started_at
                 trace.duration_ms = delta.total_seconds() * 1000

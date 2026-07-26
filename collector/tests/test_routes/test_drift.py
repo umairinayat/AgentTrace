@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from httpx import AsyncClient
@@ -16,7 +16,7 @@ def _make_alert(
     """Create a drift alert payload as the detector would post it."""
     return {
         "agent_name": agent_name,
-        "detected_at": datetime.now(timezone.utc).isoformat(),
+        "detected_at": datetime.now(UTC).isoformat(),
         "alert_type": alert_type,
         "severity": "warning",
         "score": score,

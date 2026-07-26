@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-from typing import Literal, Optional
+from datetime import UTC, datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -13,7 +13,7 @@ from agenttrace._version import SDK_VERSION
 
 def _utcnow() -> datetime:
     """Return timezone-aware UTC now."""
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def _uuid() -> str:
@@ -27,7 +27,7 @@ class SpanEvent(BaseModel):
     # Identity
     trace_id: str = Field(default_factory=_uuid)
     span_id: str = Field(default_factory=_uuid)
-    parent_span_id: Optional[str] = None
+    parent_span_id: str | None = None
 
     # Classification
     agent_name: str
@@ -43,23 +43,23 @@ class SpanEvent(BaseModel):
 
     # Timing
     started_at: datetime = Field(default_factory=_utcnow)
-    ended_at: Optional[datetime] = None
-    latency_ms: Optional[float] = None
+    ended_at: datetime | None = None
+    latency_ms: float | None = None
 
     # LLM-specific
-    model: Optional[str] = None
-    prompt_tokens: Optional[int] = None
-    completion_tokens: Optional[int] = None
-    total_tokens: Optional[int] = None
-    cost_usd: Optional[float] = None
+    model: str | None = None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
+    cost_usd: float | None = None
 
     # Payload
-    input_data: Optional[dict[str, object]] = None
-    output_data: Optional[dict[str, object]] = None
+    input_data: dict[str, object] | None = None
+    output_data: dict[str, object] | None = None
 
     # Extra
-    error: Optional[str] = None
-    metadata: Optional[dict[str, object]] = None
+    error: str | None = None
+    metadata: dict[str, object] | None = None
     sdk_version: str = Field(default=SDK_VERSION)
 
 
@@ -67,12 +67,12 @@ class BatchSpanRequest(BaseModel):
     """What the SDK sends to the Collector -- a batch of spans."""
 
     spans: list[SpanEvent]
-    agent_session_id: Optional[str] = None
+    agent_session_id: str | None = None
 
 
 class TraceContext(BaseModel):
     """Stored in contextvars for async propagation."""
 
     trace_id: str
-    parent_span_id: Optional[str] = None
+    parent_span_id: str | None = None
     agent_name: str

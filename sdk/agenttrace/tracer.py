@@ -8,9 +8,10 @@ import functools
 import logging
 import time
 import uuid
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from datetime import datetime, timezone
-from typing import Any, Callable, Generator, Optional, TypeVar
+from datetime import UTC, datetime
+from typing import Any, TypeVar
 
 from agenttrace.client import TraceClient
 from agenttrace.context import get_current_context, set_current_context
@@ -31,8 +32,8 @@ class SpanContext:
         tracer: Tracer,
         event_type: str,
         agent_name: str,
-        trace_id: Optional[str] = None,
-        parent_span_id: Optional[str] = None,
+        trace_id: str | None = None,
+        parent_span_id: str | None = None,
     ) -> None:
         self._tracer = tracer
         self.span_id = str(uuid.uuid4())
@@ -41,16 +42,16 @@ class SpanContext:
         self.agent_name = agent_name
         self.event_type = event_type
         self._start_time: float = 0
-        self._started_at: Optional[datetime] = None
-        self._input_data: Optional[dict[str, object]] = None
-        self._output_data: Optional[dict[str, object]] = None
-        self._metadata: Optional[dict[str, object]] = None
-        self._model: Optional[str] = None
-        self._prompt_tokens: Optional[int] = None
-        self._completion_tokens: Optional[int] = None
-        self._total_tokens: Optional[int] = None
-        self._error: Optional[str] = None
-        self._previous_context: Optional[TraceContext] = None
+        self._started_at: datetime | None = None
+        self._input_data: dict[str, object] | None = None
+        self._output_data: dict[str, object] | None = None
+        self._metadata: dict[str, object] | None = None
+        self._model: str | None = None
+        self._prompt_tokens: int | None = None
+        self._completion_tokens: int | None = None
+        self._total_tokens: int | None = None
+        self._error: str | None = None
+        self._previous_context: TraceContext | None = None
 
     def set_input(self, data: dict[str, object]) -> SpanContext:
         """Set the input data for this span."""
@@ -69,15 +70,17 @@ class SpanContext:
 
     def set_tokens(
         self,
-        prompt_tokens: Optional[int] = None,
-        completion_tokens: Optional[int] = None,
-        total_tokens: Optional[int] = None,
+        prompt_tokens: int | None = None,
+        completion_tokens: int | None = None,
+        total_tokens: int | None = None,
     ) -> SpanContext:
         """Set token counts for this span."""
         self._prompt_tokens = prompt_tokens
         self._completion_tokens = completion_tokens
         self._total_tokens = total_tokens or (
-            (prompt_tokens or 0) + (completion_tokens or 0) if prompt_tokens or completion_tokens else None
+            (prompt_tokens or 0) + (completion_tokens or 0)
+            if prompt_tokens or completion_tokens
+            else None
         )
         return self
 
@@ -93,7 +96,7 @@ class SpanContext:
 
     def __enter__(self) -> SpanContext:
         self._start_time = time.monotonic()
-        self._started_at = datetime.now(timezone.utc)
+        self._started_at = datetime.now(UTC)
 
         # Save previous context and set new one
         self._previous_context = get_current_context()
@@ -108,12 +111,12 @@ class SpanContext:
 
     def __exit__(
         self,
-        exc_type: Optional[type],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[object],
+        exc_type: type | None,
+        exc_val: BaseException | None,
+        exc_tb: object | None,
     ) -> None:
         latency_ms = (time.monotonic() - self._start_time) * 1000
-        ended_at = datetime.now(timezone.utc)
+        ended_at = datetime.now(UTC)
 
         if exc_val is not None:
             self._error = str(exc_val)
@@ -126,7 +129,7 @@ class SpanContext:
             parent_span_id=self.parent_span_id,
             agent_name=self.agent_name,
             event_type=self.event_type,  # type: ignore[arg-type]
-            started_at=self._started_at or datetime.now(timezone.utc),
+            started_at=self._started_at or datetime.now(UTC),
             ended_at=ended_at,
             latency_ms=latency_ms,
             model=self._model,
@@ -159,8 +162,8 @@ class Tracer:
     """
 
     def __init__(self) -> None:
-        self._client: Optional[TraceClient] = None
-        self._queue: Optional[EventQueue] = None
+        self._client: TraceClient | None = None
+        self._queue: EventQueue | None = None
         self._initialized = False
         self._batch_size = 10
         self._flush_interval = 2.0
@@ -173,7 +176,7 @@ class Tracer:
         collector_url: str = "http://localhost:8000",
         batch_size: int = 10,
         flush_interval: float = 2.0,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
     ) -> None:
         """Initialize the tracer with collector connection details.
 
@@ -202,7 +205,7 @@ class Tracer:
 
         # Start the flush loop if there's a running event loop
         try:
-            loop = asyncio.get_running_loop()
+            asyncio.get_running_loop()
             self._queue.start()
         except RuntimeError:
             # No event loop running -- queue will be started on first emit
@@ -239,9 +242,9 @@ class Tracer:
     def span(
         self,
         event_type: str = "llm_call",
-        agent_name: Optional[str] = None,
-        trace_id: Optional[str] = None,
-        parent_span_id: Optional[str] = None,
+        agent_name: str | None = None,
+        trace_id: str | None = None,
+        parent_span_id: str | None = None,
     ) -> Generator[SpanContext, None, None]:
         """Create a traced span as a context manager.
 
@@ -280,7 +283,7 @@ class Tracer:
             yield span_ctx
 
     def trace_agent(
-        self, name: Optional[str] = None
+        self, name: str | None = None
     ) -> Callable[[F], F]:
         """Decorator to trace an agent function (sync or async).
 

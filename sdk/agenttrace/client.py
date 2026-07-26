@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Optional
 
 import httpx
 
@@ -28,7 +27,7 @@ class TraceClient:
         self,
         collector_url: str = "http://localhost:8000",
         timeout: float = 10.0,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
     ) -> None:
         """Initialize the trace client.
 
@@ -40,7 +39,7 @@ class TraceClient:
         self._collector_url = collector_url.rstrip("/")
         self._timeout = timeout
         self._api_key = api_key
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
     async def _get_client(self) -> httpx.AsyncClient:
         """Get or create the async HTTP client."""

@@ -20,9 +20,11 @@ class TestTracer:
     def test_not_initialized_raises(self) -> None:
         """Using tracer before init should raise RuntimeError."""
         t = Tracer()
-        with pytest.raises(RuntimeError, match="not initialized"):
-            with t.span("llm_call", agent_name="test"):
-                pass
+        with (
+            pytest.raises(RuntimeError, match="not initialized"),
+            t.span("llm_call", agent_name="test"),
+        ):
+            pass
 
     def test_span_creates_event(self) -> None:
         """Span context manager should produce a SpanEvent."""
@@ -30,7 +32,6 @@ class TestTracer:
         t.init(collector_url="http://localhost:8000")
 
         collected_events = []
-        original_emit = t._emit
 
         def mock_emit(event):  # type: ignore[no-untyped-def]
             collected_events.append(event)
@@ -60,9 +61,8 @@ class TestTracer:
         collected_events = []
         t._emit = lambda event: collected_events.append(event)  # type: ignore[assignment]
 
-        with pytest.raises(ValueError, match="test error"):
-            with t.span("llm_call", agent_name="test") as span:
-                raise ValueError("test error")
+        with pytest.raises(ValueError, match="test error"), t.span("llm_call", agent_name="test"):
+            raise ValueError("test error")
 
         assert len(collected_events) == 1
         assert collected_events[0].error == "test error"
@@ -110,9 +110,11 @@ class TestTracer:
         collected_events = []
         t._emit = lambda event: collected_events.append(event)  # type: ignore[assignment]
 
-        with t.span("agent_start", agent_name="parent") as parent_span:
-            with t.span("llm_call", agent_name="child") as child_span:
-                pass
+        with (
+            t.span("agent_start", agent_name="parent") as parent_span,
+            t.span("llm_call", agent_name="child"),
+        ):
+            pass
 
         assert len(collected_events) == 2
         child_event = collected_events[0]

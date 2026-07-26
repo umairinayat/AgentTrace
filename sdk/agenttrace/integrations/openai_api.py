@@ -7,11 +7,12 @@ targeting the OpenAI REST API directly (without the openai SDK).
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -62,10 +63,8 @@ class OpenAITracingTransport(httpx.BaseTransport):
 
         body: dict[str, Any] = {}
         if request.content:
-            try:
+            with contextlib.suppress(json.JSONDecodeError, UnicodeDecodeError):
                 body = json.loads(request.content)
-            except (json.JSONDecodeError, UnicodeDecodeError):
-                pass
 
         model = body.get("model", "openai")
         prompt = ""
@@ -123,7 +122,7 @@ class OpenAITracingTransport(httpx.BaseTransport):
                 parent_span_id=ctx.parent_span_id if ctx else None,
                 agent_name="openai_agent",
                 event_type="llm_call",
-                started_at=datetime.now(timezone.utc),
+                started_at=datetime.now(UTC),
                 latency_ms=latency,
                 model=model,
                 prompt_tokens=prompt_tokens,

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import func, select
@@ -31,11 +30,11 @@ router = APIRouter(tags=["traces"])
 async def list_traces(
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
-    agent_name: Optional[str] = None,
-    status: Optional[str] = None,
-    from_date: Optional[datetime] = None,
-    to_date: Optional[datetime] = None,
-    min_cost: Optional[float] = None,
+    agent_name: str | None = None,
+    status: str | None = None,
+    from_date: datetime | None = None,
+    to_date: datetime | None = None,
+    min_cost: float | None = None,
     sort_by: str = Query("started_at", pattern="^(started_at|cost|duration|tokens)$"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     session: AsyncSession = Depends(get_session),

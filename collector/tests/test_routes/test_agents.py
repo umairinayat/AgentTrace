@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from httpx import AsyncClient
@@ -14,7 +14,7 @@ def _span(trace_id: str, span_id: str, agent_name: str) -> dict:
         "span_id": span_id,
         "agent_name": agent_name,
         "event_type": "llm_call",
-        "started_at": datetime.now(timezone.utc).isoformat(),
+        "started_at": datetime.now(UTC).isoformat(),
     }
 
 

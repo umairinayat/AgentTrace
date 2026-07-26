@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
@@ -23,7 +22,7 @@ class BaselineRecord(BaseModel):
     """Stored baseline for an agent."""
 
     agent_name: str
-    built_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    built_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     n_samples: int
     avg_response_length: float
     avg_latency_ms: float
@@ -37,7 +36,7 @@ class DriftAlert(BaseModel):
     """A detected drift alert."""
 
     agent_name: str
-    detected_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    detected_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     alert_type: str  # semantic | distribution | token | tool
     severity: str = "warning"  # warning | critical
     score: float
@@ -49,9 +48,9 @@ class DriftReport(BaseModel):
     """Results of a drift comparison."""
 
     agent_name: str
-    checked_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    checked_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     alerts: list[DriftAlert]
     is_drifted: bool
-    cosine_distance: Optional[float] = None
-    ks_p_value: Optional[float] = None
-    token_pct_change: Optional[float] = None
+    cosine_distance: float | None = None
+    ks_p_value: float | None = None
+    token_pct_change: float | None = None

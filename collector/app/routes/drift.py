@@ -14,8 +14,7 @@ These endpoints are the persistence surface for the drift detector worker:
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
@@ -38,8 +37,8 @@ router = APIRouter(tags=["drift"])
 
 @router.get("/drift/alerts", response_model=list[DriftAlertResponse])
 async def get_drift_alerts(
-    agent_name: Optional[str] = None,
-    resolved: Optional[int] = Query(None, ge=0, le=1),
+    agent_name: str | None = None,
+    resolved: int | None = Query(None, ge=0, le=1),
     session: AsyncSession = Depends(get_session),
 ) -> list[DriftAlertResponse]:
     """Get drift alerts, optionally filtered by agent and resolution status."""
@@ -67,7 +66,7 @@ async def post_drift_alerts(
     avoid flooding the feed on every check cycle.
     """
     accepted = 0
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     for payload in alerts:
         detected_at = payload.detected_at or now
@@ -164,7 +163,7 @@ async def rebuild_baseline(
 
 @router.get("/drift/rebuild-requests", response_model=list[DriftRebuildRequestResponse])
 async def list_rebuild_requests(
-    agent_name: Optional[str] = None,
+    agent_name: str | None = None,
     session: AsyncSession = Depends(get_session),
 ) -> list[DriftRebuildRequestResponse]:
     """List pending (unconsumed) baseline rebuild requests."""

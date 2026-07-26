@@ -17,7 +17,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from typing import Any, Optional
+from typing import Any
 
 import httpx
 
@@ -86,7 +86,7 @@ class DriftDetectorService:
             email_recipient=os.environ.get("ALERT_EMAIL"),
         )
         self._config = DriftConfig()
-        self._http: Optional[httpx.AsyncClient] = None
+        self._http: httpx.AsyncClient | None = None
 
     # ------------------------------------------------------------------ http
 
@@ -170,7 +170,7 @@ class DriftDetectorService:
 
     # --------------------------------------------------------- persistence
 
-    async def _load_baseline(self, agent_name: str) -> Optional[BaselineRecord]:
+    async def _load_baseline(self, agent_name: str) -> BaselineRecord | None:
         """Load the most recent persisted baseline for an agent, if any."""
         try:
             data = await self._get_json(f"/api/v1/drift/baseline/{agent_name}")
@@ -238,7 +238,7 @@ class DriftDetectorService:
         tools = [t for t in (_extract_tool(s) for s in tool_spans) if t]
 
         # Load existing baseline unless a rebuild was requested.
-        baseline: Optional[BaselineRecord] = None
+        baseline: BaselineRecord | None = None
         if not force_rebuild:
             baseline = await self._load_baseline(agent_name)
 

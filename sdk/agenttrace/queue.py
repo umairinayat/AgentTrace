@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from agenttrace.client import TraceClient
@@ -40,7 +41,7 @@ class EventQueue:
         self._batch_size = batch_size
         self._flush_interval = flush_interval
         self._queue: asyncio.Queue[SpanEvent] = asyncio.Queue(maxsize=max_queue_size)
-        self._flush_task: Optional[asyncio.Task[None]] = None
+        self._flush_task: asyncio.Task[None] | None = None
         self._running = False
 
     def start(self) -> None:
@@ -56,10 +57,8 @@ class EventQueue:
         self._running = False
         if self._flush_task is not None:
             self._flush_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._flush_task
-            except asyncio.CancelledError:
-                pass
         # Drain remaining events
         await self._flush_batch()
         logger.debug("EventQueue stopped, remaining events flushed")

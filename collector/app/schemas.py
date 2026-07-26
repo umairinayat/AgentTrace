@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
-from pydantic import BaseModel, Field
-
+from pydantic import BaseModel
 
 # --- Request schemas ---
 
@@ -16,21 +14,21 @@ class SpanEventSchema(BaseModel):
 
     trace_id: str
     span_id: str
-    parent_span_id: Optional[str] = None
+    parent_span_id: str | None = None
     agent_name: str
     event_type: str
     started_at: datetime
-    ended_at: Optional[datetime] = None
-    latency_ms: Optional[float] = None
-    model: Optional[str] = None
-    prompt_tokens: Optional[int] = None
-    completion_tokens: Optional[int] = None
-    total_tokens: Optional[int] = None
-    cost_usd: Optional[float] = None
-    input_data: Optional[dict[str, object]] = None
-    output_data: Optional[dict[str, object]] = None
-    error: Optional[str] = None
-    metadata: Optional[dict[str, object]] = None
+    ended_at: datetime | None = None
+    latency_ms: float | None = None
+    model: str | None = None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
+    cost_usd: float | None = None
+    input_data: dict[str, object] | None = None
+    output_data: dict[str, object] | None = None
+    error: str | None = None
+    metadata: dict[str, object] | None = None
     sdk_version: str = "0.1.0"
 
 
@@ -38,7 +36,7 @@ class BatchSpanRequest(BaseModel):
     """Batch of spans from the SDK."""
 
     spans: list[SpanEventSchema]
-    agent_session_id: Optional[str] = None
+    agent_session_id: str | None = None
 
 
 # --- Response schemas ---
@@ -55,21 +53,21 @@ class SpanResponse(BaseModel):
 
     id: str
     trace_id: str
-    parent_span_id: Optional[str] = None
+    parent_span_id: str | None = None
     agent_name: str
     event_type: str
     started_at: datetime
-    ended_at: Optional[datetime] = None
-    latency_ms: Optional[float] = None
-    model: Optional[str] = None
-    prompt_tokens: Optional[int] = None
-    completion_tokens: Optional[int] = None
-    total_tokens: Optional[int] = None
-    cost_usd: Optional[float] = None
-    input_data: Optional[dict[str, object]] = None
-    output_data: Optional[dict[str, object]] = None
-    error: Optional[str] = None
-    metadata: Optional[dict[str, object]] = None
+    ended_at: datetime | None = None
+    latency_ms: float | None = None
+    model: str | None = None
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    total_tokens: int | None = None
+    cost_usd: float | None = None
+    input_data: dict[str, object] | None = None
+    output_data: dict[str, object] | None = None
+    error: str | None = None
+    metadata: dict[str, object] | None = None
 
     model_config = {"from_attributes": True}
 
@@ -79,12 +77,12 @@ class TraceResponse(BaseModel):
 
     id: str
     name: str
-    agent_name: Optional[str] = None
+    agent_name: str | None = None
     started_at: datetime
-    ended_at: Optional[datetime] = None
-    duration_ms: Optional[float] = None
-    total_tokens: Optional[int] = None
-    total_cost_usd: Optional[float] = None
+    ended_at: datetime | None = None
+    duration_ms: float | None = None
+    total_tokens: int | None = None
+    total_cost_usd: float | None = None
     status: str
     span_count: int = 0
 
@@ -97,12 +95,12 @@ class TraceDetailResponse(BaseModel):
     id: str
     name: str
     started_at: datetime
-    ended_at: Optional[datetime] = None
-    duration_ms: Optional[float] = None
-    total_tokens: Optional[int] = None
-    total_cost_usd: Optional[float] = None
+    ended_at: datetime | None = None
+    duration_ms: float | None = None
+    total_tokens: int | None = None
+    total_cost_usd: float | None = None
     status: str
-    metadata: Optional[dict[str, object]] = None
+    metadata: dict[str, object] | None = None
     spans: list[SpanResponse]
 
     model_config = {"from_attributes": True}
@@ -112,15 +110,15 @@ class TimelineSpan(BaseModel):
     """Span formatted for Gantt timeline visualization."""
 
     span_id: str
-    parent_span_id: Optional[str] = None
+    parent_span_id: str | None = None
     agent_name: str
     event_type: str
     start_offset_ms: float
     duration_ms: float
-    model: Optional[str] = None
-    total_tokens: Optional[int] = None
-    cost_usd: Optional[float] = None
-    error: Optional[str] = None
+    model: str | None = None
+    total_tokens: int | None = None
+    cost_usd: float | None = None
+    error: str | None = None
 
 
 class TimelineData(BaseModel):
@@ -154,9 +152,9 @@ class DriftAlertResponse(BaseModel):
     detected_at: datetime
     alert_type: str
     severity: str
-    score: Optional[float] = None
-    threshold: Optional[float] = None
-    description: Optional[str] = None
+    score: float | None = None
+    threshold: float | None = None
+    description: str | None = None
     resolved: int = 0
 
     model_config = {"from_attributes": True}
@@ -173,12 +171,12 @@ class DriftBaselineResponse(BaseModel):
     agent_name: str
     built_at: datetime
     n_samples: int
-    avg_response_length: Optional[float] = None
-    avg_latency_ms: Optional[float] = None
-    avg_token_count: Optional[float] = None
-    embedding_centroid: Optional[list[float]] = None
-    response_length_distribution: Optional[list[float]] = None
-    tool_call_distribution: Optional[dict[str, float]] = None
+    avg_response_length: float | None = None
+    avg_latency_ms: float | None = None
+    avg_token_count: float | None = None
+    embedding_centroid: list[float] | None = None
+    response_length_distribution: list[float] | None = None
+    tool_call_distribution: dict[str, float] | None = None
 
     model_config = {"from_attributes": True}
 
@@ -188,24 +186,24 @@ class DriftBaselineCreate(BaseModel):
 
     agent_name: str
     n_samples: int
-    avg_response_length: Optional[float] = None
-    avg_latency_ms: Optional[float] = None
-    avg_token_count: Optional[float] = None
-    embedding_centroid: Optional[list[float]] = None
-    response_length_distribution: Optional[list[float]] = None
-    tool_call_distribution: Optional[dict[str, float]] = None
+    avg_response_length: float | None = None
+    avg_latency_ms: float | None = None
+    avg_token_count: float | None = None
+    embedding_centroid: list[float] | None = None
+    response_length_distribution: list[float] | None = None
+    tool_call_distribution: dict[str, float] | None = None
 
 
 class DriftAlertCreate(BaseModel):
     """Payload the drift detector sends when posting a detected alert."""
 
     agent_name: str
-    detected_at: Optional[datetime] = None
+    detected_at: datetime | None = None
     alert_type: str
     severity: str = "warning"
-    score: Optional[float] = None
-    threshold: Optional[float] = None
-    description: Optional[str] = None
+    score: float | None = None
+    threshold: float | None = None
+    description: str | None = None
 
 
 class DriftRebuildRequestResponse(BaseModel):

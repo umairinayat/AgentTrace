@@ -6,7 +6,7 @@ import functools
 import logging
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from agenttrace.context import get_current_context
@@ -31,7 +31,9 @@ def patch_openai() -> None:
         response = client.chat.completions.create(model="gpt-4o", messages=[...])
     """
     try:
-        from openai.resources.chat import completions as _completions  # type: ignore[import-untyped]
+        from openai.resources.chat import (
+            completions as _completions,  # type: ignore[import-untyped]
+        )
     except ImportError:
         logger.warning("openai is not installed — skipping patch")
         return
@@ -92,7 +94,7 @@ def patch_openai() -> None:
                 parent_span_id=ctx.parent_span_id if ctx else None,
                 agent_name="openai_agent",
                 event_type="llm_call",
-                started_at=datetime.now(timezone.utc),
+                started_at=datetime.now(UTC),
                 latency_ms=latency,
                 model=model,
                 prompt_tokens=prompt_tokens,
