@@ -138,3 +138,58 @@ async def test_filter_by_agent_uses_span_not_trace_name(client: AsyncClient) -> 
     data = response.json()
     assert data["total"] == 1
     assert data["items"][0]["id"] == "multi"
+
+
+@pytest.mark.asyncio
+async def test_pagination(client: AsyncClient) -> None:
+    """page_size + page should slice the result set and report totals."""
+    for i in range(5):
+        await client.post(
+            "/api/v1/spans",
+            json={"spans": [_make_span(trace_id=f"t{i}", span_id=f"s{i}")]},
+        )
+
+    resp = await client.get("/api/v1/traces?page_size=2&page=1")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 5
+    assert data["pages"] == 3
+    assert len(data["items"]) == 2
+
+    # Sort ascending by started_at so page 2 is deterministic.
+    page2 = await client.get("/api/v1/traces?page_size=2&page=2&sort_order=asc")
+    assert page2.json()["total"] == 5
+    assert len(page2.json()["items"]) == 2
+
+
+@pytest.mark.asyncio
+async def test_sort_by_cost(client: AsyncClient) -> None:
+    """sort_by=cost orders traces ascending/descending by total cost."""
+    costs = {"lo": 0.001, "mid": 0.01, "hi": 0.05}
+    for tid, cost in costs.items():
+        span = _make_span(trace_id=tid, span_id=f"{tid}-s")
+        span["cost_usd"] = cost
+        await client.post("/api/v1/spans", json={"spans": [span]})
+
+    asc = await client.get("/api/v1/traces?sort_by=cost&sort_order=asc")
+    asc_names = [t["id"] for t in asc.json()["items"]]
+    assert asc_names == ["lo", "mid", "hi"]
+
+    desc = await client.get("/api/v1/traces?sort_by=cost&sort_order=desc")
+    desc_names = [t["id"] for t in desc.json()["items"]]
+    assert desc_names == ["hi", "mid", "lo"]
+
+
+@pytest.mark.asyncio
+async def test_min_cost_filter(client: AsyncClient) -> None:
+    """min_cost filters out low-cost traces."""
+    for tid, cost in {"cheap": 0.001, "pricey": 0.05}.items():
+        span = _make_span(trace_id=tid, span_id=f"{tid}-s")
+        span["cost_usd"] = cost
+        await client.post("/api/v1/spans", json={"spans": [span]})
+
+    resp = await client.get("/api/v1/traces?min_cost=0.01")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["total"] == 1
+    assert data["items"][0]["id"] == "pricey"

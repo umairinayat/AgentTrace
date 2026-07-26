@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import * as d3 from 'd3';
+import { useContainerWidth } from '../hooks/useContainerWidth';
 import type { TimelineSpan } from '../types';
 
 const EVENT_COLORS: Record<string, string> = {
@@ -30,15 +31,14 @@ export default function GanttTimeline({
   selectedSpanId,
   onSelectSpan,
 }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerRef, width] = useContainerWidth<HTMLDivElement>();
 
   useEffect(() => {
-    if (!containerRef.current || spans.length === 0) return;
+    if (!containerRef.current || spans.length === 0 || width === 0) return;
 
     const container = containerRef.current;
     const margin = { top: 20, right: 30, bottom: 30, left: 160 };
     const rowHeight = 28;
-    const width = container.clientWidth;
     const height = Math.max(200, spans.length * rowHeight + margin.top + margin.bottom);
 
     // Clear previous
@@ -154,7 +154,7 @@ export default function GanttTimeline({
         .attr('fill', '#6B7280')
         .text(item.label);
     });
-  }, [spans, totalDurationMs, selectedSpanId, onSelectSpan]);
+  }, [spans, totalDurationMs, selectedSpanId, onSelectSpan, width]);
 
   if (spans.length === 0) {
     return <div className="p-8 text-center text-gray-400">No spans to display</div>;

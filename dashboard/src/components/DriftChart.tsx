@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import * as d3 from 'd3';
+import { useContainerWidth } from '../hooks/useContainerWidth';
 import type { DriftAlertResponse } from '../types';
 
 interface Props {
@@ -8,14 +9,13 @@ interface Props {
 }
 
 export default function DriftChart({ alerts, threshold = 0.15 }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerRef, width] = useContainerWidth<HTMLDivElement>();
 
   useEffect(() => {
-    if (!containerRef.current || alerts.length === 0) return;
+    if (!containerRef.current || alerts.length === 0 || width === 0) return;
 
     const container = containerRef.current;
     const margin = { top: 20, right: 20, bottom: 40, left: 50 };
-    const width = container.clientWidth;
     const height = 200;
 
     d3.select(container).selectAll('*').remove();
@@ -99,7 +99,7 @@ export default function DriftChart({ alerts, threshold = 0.15 }: Props) {
       .attr('cy', (d) => yScale(d.score))
       .attr('r', 3)
       .attr('fill', (d) => (d.score >= threshold ? '#EF4444' : '#3B82F6'));
-  }, [alerts, threshold]);
+  }, [alerts, threshold, width]);
 
   if (alerts.length === 0) {
     return <p className="py-4 text-center text-sm text-gray-400">No drift data</p>;

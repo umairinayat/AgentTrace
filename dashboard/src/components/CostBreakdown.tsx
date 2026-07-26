@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import * as d3 from 'd3';
+import { useContainerWidth } from '../hooks/useContainerWidth';
 
 interface BarItem {
   label: string;
@@ -19,15 +20,14 @@ export default function CostBreakdown({
   formatValue = (v) => `$${v.toFixed(4)}`,
   color = '#3B82F6',
 }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerRef, width] = useContainerWidth<HTMLDivElement>();
 
   useEffect(() => {
-    if (!containerRef.current || items.length === 0) return;
+    if (!containerRef.current || items.length === 0 || width === 0) return;
 
     const container = containerRef.current;
     const margin = { top: 10, right: 60, bottom: 30, left: 120 };
     const barHeight = 24;
-    const width = container.clientWidth;
     const height = items.length * barHeight + margin.top + margin.bottom;
 
     d3.select(container).selectAll('*').remove();
@@ -81,7 +81,7 @@ export default function CostBreakdown({
       .attr('font-size', '10px')
       .attr('fill', '#6B7280')
       .text((d) => formatValue(d.value));
-  }, [items, formatValue, color]);
+  }, [items, formatValue, color, width]);
 
   return (
     <div className="rounded-lg border bg-white p-4 shadow-sm">
