@@ -1,8 +1,8 @@
 site_name: AgentTrace
-site_url: https://agenttrace.github.io/agenttrace/
+site_url: https://umairinayat.github.io/AgentTrace/
 site_description: "Open-source observability for multi-agent AI systems"
-repo_url: https://github.com/agenttrace/agenttrace
-repo_name: agenttrace/agenttrace
+repo_url: https://github.com/umairinayat/AgentTrace
+repo_name: umairinayat/AgentTrace
 
 theme:
   name: material
@@ -67,4 +67,4 @@ plugins:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/agenttrace/agenttrace
+      link: https://github.com/umairinayat/AgentTrace
