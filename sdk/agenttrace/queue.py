@@ -113,3 +113,8 @@ class EventQueue:
     def pending_count(self) -> int:
         """Number of events waiting to be flushed."""
         return self._queue.qsize()
+
+    @property
+    def is_running(self) -> bool:
+        """Whether the background flush loop is currently running."""
+        return self._running

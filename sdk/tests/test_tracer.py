@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from agenttrace.models import SpanEvent
 from agenttrace.tracer import Tracer
 
 
@@ -120,3 +121,42 @@ class TestTracer:
         assert child_event.trace_id == parent_event.trace_id
         # Child parent_span_id should point to parent's span_id
         assert child_event.parent_span_id == parent_span.span_id
+
+    def test_sync_flush_delivers_buffered_spans(self) -> None:
+        """Spans emitted from sync code (no event loop) must flush via flush_sync.
+
+        This is the path used by synchronous integrations like LangChain's
+        ``.invoke()``: ``_emit`` buffers into the queue because the async flush
+        loop cannot run, and ``flush_sync`` (also run at interpreter exit) drains
+        it. Without it, sync traces were silently lost.
+        """
+
+        class FakeClient:
+            def __init__(self) -> None:
+                self.sent: list[SpanEvent] = []
+
+            async def send_batch(self, spans: list[SpanEvent]) -> int:
+                self.sent.extend(spans)
+                return len(spans)
+
+            async def close(self) -> None:
+                pass
+
+        t = Tracer()
+        t.init(collector_url="http://localhost:8000")
+        fake = FakeClient()
+        assert t._queue is not None
+        t._queue._client = fake  # type: ignore[attr-defined]
+        t._client = fake  # type: ignore[assignment]
+
+        with t.span("llm_call", agent_name="sync_agent") as span:
+            span.set_output({"response": "hi"})
+
+        # No running loop -> event is buffered, not yet sent.
+        assert t._queue.pending_count == 1
+
+        t.flush_sync()
+
+        assert len(fake.sent) == 1
+        assert fake.sent[0].agent_name == "sync_agent"
+        assert t._queue.pending_count == 0

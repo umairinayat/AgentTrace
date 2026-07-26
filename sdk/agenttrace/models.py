@@ -8,6 +8,8 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
+from agenttrace._version import SDK_VERSION
+
 
 def _utcnow() -> datetime:
     """Return timezone-aware UTC now."""
@@ -58,7 +60,7 @@ class SpanEvent(BaseModel):
     # Extra
     error: Optional[str] = None
     metadata: Optional[dict[str, object]] = None
-    sdk_version: str = "0.1.0"
+    sdk_version: str = Field(default=SDK_VERSION)
 
 
 class BatchSpanRequest(BaseModel):

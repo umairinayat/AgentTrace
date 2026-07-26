@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 import uuid
@@ -9,12 +10,13 @@ from datetime import datetime, timezone
 from functools import wraps
 from typing import Any, Callable, Optional
 
-from agenttrace.context import get_current_context, set_current_context
+from agenttrace.context import get_current_context
 from agenttrace.models import SpanEvent, TraceContext
 
 logger = logging.getLogger(__name__)
 
 _patched = False
+_original_add_node: Optional[Callable[..., Any]] = None
 
 
 def patch_langgraph(
@@ -41,7 +43,9 @@ def patch_langgraph(
         logger.error("langgraph not installed. Install with: pip install langgraph")
         raise
 
+    # Stash the original so unpatch_langgraph can restore it in-process.
     original_add_node = StateGraph.add_node
+    globals()["_original_add_node"] = original_add_node
 
     def patched_add_node(self: Any, node: str, action: Callable[..., Any], **kwargs: Any) -> Any:
         """Wrap node action with tracing."""
@@ -111,15 +115,22 @@ def _wrap_node(
                 span.event_type = "error"
                 raise
 
-    import asyncio
-
     if asyncio.iscoroutinefunction(func):
         return async_wrapper
     return wrapper
 
 
 def unpatch_langgraph() -> None:
-    """Remove the LangGraph monkey-patch."""
-    global _patched
+    """Remove the LangGraph monkey-patch, restoring the original ``add_node``.
+
+    Unlike the previous implementation, this fully reverses the patch in-process
+    rather than requiring a restart.
+    """
+    global _patched, _original_add_node
+    from langgraph.graph import StateGraph  # type: ignore[import-untyped]
+
+    if _original_add_node is not None:
+        StateGraph.add_node = _original_add_node  # type: ignore[assignment]
+        _original_add_node = None
     _patched = False
-    logger.info("LangGraph unpatch requested (requires restart to fully remove)")
+    logger.info("LangGraph unpatched")

@@ -75,6 +75,10 @@ class OpenAITracingTransport(httpx.BaseTransport):
         elif "prompt" in body:
             prompt = str(body["prompt"])[:500]
 
+        # Streaming responses cannot be read here without consuming the caller's
+        # stream, so we skip response capture for streamed requests.
+        is_stream = bool(body.get("stream", False))
+
         start = time.monotonic()
         error_msg = None
         response = None
@@ -92,7 +96,7 @@ class OpenAITracingTransport(httpx.BaseTransport):
         finally:
             latency = (time.monotonic() - start) * 1000
 
-            if response and response.status_code == 200:
+            if response and response.status_code == 200 and not is_stream:
                 try:
                     resp_body = json.loads(response.content)
                     choices = resp_body.get("choices", [])

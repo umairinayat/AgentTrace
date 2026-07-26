@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+import atexit
 import functools
 import logging
 import time
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timezone
-from typing import Any, Callable, Generator, Optional, TypeVar, Union
+from typing import Any, Callable, Generator, Optional, TypeVar
 
 from agenttrace.client import TraceClient
 from agenttrace.context import get_current_context, set_current_context
@@ -163,6 +164,9 @@ class Tracer:
         self._initialized = False
         self._batch_size = 10
         self._flush_interval = 2.0
+        # Ensure spans emitted from synchronous code (no running event loop, e.g.
+        # LangChain's sync .invoke()) are not lost -- flush on interpreter exit.
+        atexit.register(self._atexit_flush)
 
     def init(
         self,
@@ -212,17 +216,22 @@ class Tracer:
             )
 
     def _emit(self, event: SpanEvent) -> None:
-        """Emit a span event to the queue."""
+        """Emit a span event to the queue.
+
+        If an event loop is running, the background flush loop is (re)started so
+        the event is delivered asynchronously. With no running loop (synchronous
+        caller), the event is buffered and delivered on the next ``flush_sync()``
+        call or at interpreter exit -- it is never silently dropped.
+        """
         self._ensure_initialized()
         assert self._queue is not None
 
-        # Start the queue if not already running
         try:
             asyncio.get_running_loop()
-            if not self._queue._running:
+            if not self._queue.is_running:
                 self._queue.start()
         except RuntimeError:
-            pass
+            pass  # No running loop; event buffered, flushed on exit / flush_sync().
 
         self._queue.enqueue(event)
 
@@ -336,3 +345,38 @@ class Tracer:
             await self._client.close()
         self._initialized = False
         logger.info("AgentTrace tracer shut down")
+
+    def flush_sync(self) -> None:
+        """Flush pending events from synchronous code with no running loop.
+
+        Spans emitted by synchronous integrations (e.g. LangChain's ``.invoke()``)
+        are buffered because the async flush loop cannot run without an event loop.
+        Call this to deliver them immediately, or rely on the automatic atexit
+        flush when the program exits.
+        """
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            pass  # No running loop -- safe to spin one up.
+        else:
+            return  # A loop is running; the async flusher will handle delivery.
+
+        if not self._initialized or self._queue is None or self._queue.pending_count == 0:
+            return
+
+        try:
+            asyncio.run(self._drain_pending())
+        except Exception:
+            logger.debug("Synchronous flush failed", exc_info=True)
+
+    def _atexit_flush(self) -> None:
+        """Best-effort flush of any buffered events when the interpreter exits."""
+        self.flush_sync()
+
+    async def _drain_pending(self) -> None:
+        """Drain all queued events in a fresh event loop (sync flush path)."""
+        assert self._queue is not None
+        while self._queue.pending_count > 0:
+            await self._queue._flush_batch()
+        if self._client is not None:
+            await self._client.close()

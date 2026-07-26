@@ -28,10 +28,18 @@ def patch_autogen() -> None:
         # Your existing AutoGen code — unchanged
     """
     try:
-        from autogen import ConversableAgent  # type: ignore[import-untyped]
+        # pyautogen / ag2 >=0.4 exposes ConversableAgent under agentchat.
+        from autogen.agentchat import ConversableAgent  # type: ignore[import-untyped]
     except ImportError:
-        logger.warning("autogen is not installed — skipping patch")
-        return
+        try:
+            # Older pyautogen 0.2 exposes it at the top level.
+            from autogen import ConversableAgent  # type: ignore[import-untyped]
+        except ImportError:
+            logger.warning(
+                "autogen is not installed — skipping patch. "
+                "Install with: pip install 'agenttrace[autogen]' (or pip install pyautogen)"
+            )
+            return
 
     if getattr(ConversableAgent, "_agenttrace_patched", False):
         return

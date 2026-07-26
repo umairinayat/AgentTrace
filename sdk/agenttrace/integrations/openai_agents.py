@@ -98,7 +98,7 @@ def patch_openai_agents() -> None:
                 span_id=span_id,
                 parent_span_id=ctx.parent_span_id if ctx else None,
                 agent_name=agent_name,
-                event_type="agent_action",
+                event_type="agent_end",
                 started_at=datetime.now(timezone.utc),
                 latency_ms=latency,
                 model=model,

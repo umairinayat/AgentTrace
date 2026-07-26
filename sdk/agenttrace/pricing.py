@@ -49,9 +49,11 @@ def estimate_cost(
 
     model_pricing = models.get(model)
     if model_pricing is None:
-        # Try matching with common prefixes stripped
+        # Match dated/suffixed variants only, e.g. "gpt-4o-2024-08-06" -> "gpt-4o".
+        # Require a version boundary so a short model like "gpt" cannot match the
+        # broader "gpt-4o" entry (the old `key.startswith(model)` was too loose).
         for key, value in models.items():
-            if model.startswith(key) or key.startswith(model):
+            if model == key or model.startswith(key + "-"):
                 model_pricing = value
                 break
 
