@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTraces } from '../hooks/useTraces';
 import type { TraceFilters } from '../types';
@@ -17,6 +17,15 @@ export default function TraceList() {
     sort_by: 'started_at',
     sort_order: 'desc',
   });
+  // Local input state; the query filter is updated on a debounce so typing a
+  // long agent name doesn't fire a request (and a new query key) per keystroke.
+  const [agentInput, setAgentInput] = useState('');
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      setFilters((f) => ({ ...f, agent_name: agentInput || undefined, page: 1 }));
+    }, 300);
+    return () => clearTimeout(handle);
+  }, [agentInput]);
 
   const { data, isLoading, error } = useTraces(filters);
 
@@ -43,10 +52,8 @@ export default function TraceList() {
           type="text"
           placeholder="Filter by agent name..."
           className="rounded border border-gray-300 px-3 py-1.5 text-sm focus:border-primary focus:outline-none"
-          value={filters.agent_name || ''}
-          onChange={(e) =>
-            setFilters((f) => ({ ...f, agent_name: e.target.value || undefined, page: 1 }))
-          }
+          value={agentInput}
+          onChange={(e) => setAgentInput(e.target.value)}
         />
         <select
           title="Filter by status"

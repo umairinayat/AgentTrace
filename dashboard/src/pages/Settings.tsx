@@ -58,7 +58,10 @@ export default function Settings() {
       </Section>
 
       {/* Alert Webhooks */}
-      <Section title="Alert Webhooks">
+      <Section
+        title="Alert Webhooks"
+        note="Alert channels are configured via environment variables on the drift-detector service (SLACK_WEBHOOK_URL, DISCORD_WEBHOOK_URL, CUSTOM_WEBHOOK_URL, SMTP_*). Editing from the dashboard is coming soon."
+      >
         <label className="mb-1 block text-xs text-gray-500">Slack Webhook URL</label>
         <input
           type="text"
@@ -86,7 +89,7 @@ export default function Settings() {
       </Section>
 
       {/* Retention */}
-      <Section title="Data Retention">
+      <Section title="Data Retention" note="Automatic retention enforcement is coming soon.">
         <label className="mb-1 block text-xs text-gray-500" htmlFor="retention-period">
           Auto-delete traces older than
         </label>
@@ -106,7 +109,11 @@ export default function Settings() {
       </Section>
 
       {/* Danger Zone */}
-      <Section title="Danger Zone" danger>
+      <Section
+        title="Danger Zone"
+        danger
+        note="Bulk trace deletion from the dashboard is coming soon. Until then, clear traces by removing the collector's database volume."
+      >
         <p className="mb-3 text-sm text-gray-600">
           Type <code className="rounded bg-red-50 px-1 text-red-600">DELETE</code> to confirm
           deleting all traces.
@@ -134,10 +141,12 @@ export default function Settings() {
 function Section({
   title,
   danger,
+  note,
   children,
 }: {
   title: string;
   danger?: boolean;
+  note?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -146,9 +155,10 @@ function Section({
         danger ? 'border-red-200 bg-red-50' : 'bg-white'
       }`}
     >
-      <h2 className={`mb-3 text-sm font-semibold ${danger ? 'text-red-700' : 'text-gray-700'}`}>
+      <h2 className={`mb-1 text-sm font-semibold ${danger ? 'text-red-700' : 'text-gray-700'}`}>
         {title}
       </h2>
+      {note && <p className="mb-3 text-xs text-gray-400">{note}</p>}
       {children}
     </div>
   );
