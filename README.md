@@ -4,7 +4,7 @@
 
   ![PyPI](https://img.shields.io/pypi/v/agenttrace)
   ![License](https://img.shields.io/badge/license-MIT-blue)
-  ![Tests](https://github.com/agenttrace/agenttrace/actions/workflows/ci.yml/badge.svg)
+  ![Tests](https://github.com/umairinayat/AgentTrace/actions/workflows/ci.yml/badge.svg)
 </div>
 
 ## The Problem

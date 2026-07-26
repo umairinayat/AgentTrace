@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["spans"])
 
+# Upper bound on a single ingest batch to bound memory/CPU per request.
+MAX_BATCH_SIZE = 1000
+
 
 @router.post("/spans", response_model=BatchSpanResponse)
 async def ingest_spans(
@@ -27,6 +30,12 @@ async def ingest_spans(
 
     Auto-creates Trace records for new trace IDs.
     """
+    if len(batch.spans) > MAX_BATCH_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Batch too large: {len(batch.spans)} spans (max {MAX_BATCH_SIZE})",
+        )
+
     accepted = 0
 
     for span_data in batch.spans:

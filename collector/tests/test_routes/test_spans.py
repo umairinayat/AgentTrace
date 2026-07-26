@@ -67,3 +67,13 @@ async def test_ingest_empty_batch(client: AsyncClient) -> None:
     response = await client.post("/api/v1/spans", json=payload)
     assert response.status_code == 200
     assert response.json()["accepted"] == 0
+
+
+@pytest.mark.asyncio
+async def test_ingest_rejects_oversized_batch(client: AsyncClient) -> None:
+    """Batches above MAX_BATCH_SIZE must be rejected (DoS guard)."""
+    from app.routes.spans import MAX_BATCH_SIZE
+
+    spans = [_make_span(span_id=f"span-{i}") for i in range(MAX_BATCH_SIZE + 1)]
+    response = await client.post("/api/v1/spans", json={"spans": spans})
+    assert response.status_code == 413

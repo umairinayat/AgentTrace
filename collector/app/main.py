@@ -37,12 +37,18 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS middleware
-origins = settings.cors_origins.split(",") if settings.cors_origins != "*" else ["*"]
+# CORS middleware. allow_credentials is only safe with explicit origins --
+# browsers reject the combination of `allow_origins=["*"]` and credentials.
+if settings.cors_origins.strip() == "*":
+    _cors_origins = ["*"]
+    _cors_credentials = False
+else:
+    _cors_origins = [o.strip() for o in settings.cors_origins.split(",") if o.strip()]
+    _cors_credentials = True
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

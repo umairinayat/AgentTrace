@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import smtplib
 from email.mime.text import MIMEText
@@ -45,7 +46,8 @@ class Alerter:
         if self._custom_webhook:
             await self._send_custom_webhook(alert)
         if self._smtp_host and self._email_recipient:
-            self._send_email(alert)
+            # SMTP is blocking -- run it off the event loop.
+            await asyncio.to_thread(self._send_email, alert)
 
     async def _send_slack(self, alert: DriftAlert) -> None:
         """Send alert to Slack webhook."""
@@ -123,7 +125,17 @@ class Alerter:
 
         try:
             with smtplib.SMTP(self._smtp_host, self._smtp_port) as server:  # type: ignore[arg-type]
-                server.starttls()
+                # STARTTLS is optional -- some servers (and port 465 implicit TLS)
+                # do not support it. Fall back to an unencrypted session rather
+                # than failing the alert entirely.
+                try:
+                    server.starttls()
+                except smtplib.SMTPException:
+                    logger.warning(
+                        "STARTTLS unavailable on %s:%s; sending without TLS",
+                        self._smtp_host,
+                        self._smtp_port,
+                    )
                 if self._smtp_user and self._smtp_password:
                     server.login(self._smtp_user, self._smtp_password)
                 server.send_message(msg)
