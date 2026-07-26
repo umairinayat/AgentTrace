@@ -15,6 +15,7 @@ class DriftConfig(BaseModel):
     ks_pvalue_threshold: float = 0.05
     token_change_threshold: float = 0.20
     tool_change_threshold: float = 0.20
+    latency_change_threshold: float = 0.50
     min_samples: int = 10
 
 

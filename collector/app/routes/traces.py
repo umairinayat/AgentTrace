@@ -45,7 +45,10 @@ async def list_traces(
 
     # Apply filters
     if agent_name:
-        query = query.where(Trace.name == agent_name)
+        # Filter by the indexed Span.agent_name rather than Trace.name, which is
+        # only incidentally set to an agent name at ingest time.
+        trace_ids_for_agent = select(Span.trace_id).where(Span.agent_name == agent_name)
+        query = query.where(Trace.id.in_(trace_ids_for_agent))
     if status:
         query = query.where(Trace.status == status)
     if from_date:

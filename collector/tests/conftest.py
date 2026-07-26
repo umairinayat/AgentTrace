@@ -33,6 +33,17 @@ async def override_get_session() -> AsyncGenerator[AsyncSession, None]:
             raise
 
 
+@pytest.fixture(scope="session", autouse=True)
+async def _dispose_test_engine() -> AsyncGenerator[None, None]:
+    """Dispose the shared test engine at session end.
+
+    Without this the aiosqlite background thread keeps the process alive and the
+    test runner hangs after all tests pass.
+    """
+    yield
+    await test_engine.dispose()
+
+
 @pytest_asyncio.fixture
 async def setup_db() -> AsyncGenerator[None, None]:
     """Create and tear down test database."""

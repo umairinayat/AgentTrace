@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.database import init_db
 from app.middleware.logging import RequestLoggingMiddleware
-from app.routes import drift, health, spans, stats, traces
+from app.routes import agents, drift, health, spans, stats, traces
 
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
@@ -55,4 +55,5 @@ app.include_router(health.router, prefix="/api/v1")
 app.include_router(spans.router, prefix="/api/v1")
 app.include_router(traces.router, prefix="/api/v1")
 app.include_router(stats.router, prefix="/api/v1")
+app.include_router(agents.router, prefix="/api/v1")
 app.include_router(drift.router, prefix="/api/v1")

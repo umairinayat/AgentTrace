@@ -159,6 +159,26 @@ class DriftComparator:
                     )
                 )
 
+        # Check 5: Latency anomaly (relative change vs. baseline average)
+        if recent_latencies and baseline.avg_latency_ms > 0:
+            recent_avg_latency = float(np.mean(recent_latencies))
+            lat_change = abs(recent_avg_latency - baseline.avg_latency_ms) / baseline.avg_latency_ms
+            if lat_change > config.latency_change_threshold:
+                alerts.append(
+                    DriftAlert(
+                        agent_name=agent_name,
+                        alert_type="latency",
+                        severity="warning",
+                        score=lat_change,
+                        threshold=config.latency_change_threshold,
+                        description=(
+                            f"Latency changed by {lat_change * 100:.1f}% "
+                            f"(baseline {baseline.avg_latency_ms:.1f}ms, "
+                            f"recent {recent_avg_latency:.1f}ms)"
+                        ),
+                    )
+                )
+
         return DriftReport(
             agent_name=agent_name,
             checked_at=datetime.now(timezone.utc),

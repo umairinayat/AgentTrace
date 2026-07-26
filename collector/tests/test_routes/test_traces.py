@@ -112,3 +112,29 @@ async def test_filter_by_agent(client: AsyncClient) -> None:
     data = response.json()
     assert data["total"] == 1
     assert data["items"][0]["name"] == "agent_a"
+
+
+@pytest.mark.asyncio
+async def test_filter_by_agent_uses_span_not_trace_name(client: AsyncClient) -> None:
+    """Filter must match on Span.agent_name, not Trace.name.
+
+    A single trace with spans from two agents: Trace.name is set to the first
+    span's agent ("first_agent"), so filtering by the second agent must still
+    return this trace. The old implementation (Trace.name == agent_name) would
+    return 0.
+    """
+    await client.post(
+        "/api/v1/spans",
+        json={
+            "spans": [
+                _make_span(trace_id="multi", span_id="s1", agent_name="first_agent"),
+                _make_span(trace_id="multi", span_id="s2", agent_name="second_agent"),
+            ]
+        },
+    )
+
+    response = await client.get("/api/v1/traces?agent_name=second_agent")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == 1
+    assert data["items"][0]["id"] == "multi"

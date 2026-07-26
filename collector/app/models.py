@@ -90,3 +90,15 @@ class DriftAlert(Base):
     threshold = Column(Float, nullable=True)
     description = Column(Text, nullable=True)
     resolved = Column(Integer, default=0)
+
+
+class DriftRebuildRequest(Base):
+    """A pending baseline rebuild request, consumed by the drift detector."""
+
+    __tablename__ = "drift_rebuild_requests"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    agent_name = Column(String, nullable=False, index=True)
+    requested_at = Column(
+        DateTime, nullable=False, default=lambda: datetime.now(timezone.utc)
+    )

@@ -163,7 +163,11 @@ class DriftAlertResponse(BaseModel):
 
 
 class DriftBaselineResponse(BaseModel):
-    """Drift baseline in API responses."""
+    """Drift baseline in API responses.
+
+    Includes the full statistical payload (embedding centroid and distributions)
+    so the drift detector can reload a baseline after a restart without rebuilding.
+    """
 
     id: int
     agent_name: str
@@ -172,8 +176,53 @@ class DriftBaselineResponse(BaseModel):
     avg_response_length: Optional[float] = None
     avg_latency_ms: Optional[float] = None
     avg_token_count: Optional[float] = None
+    embedding_centroid: Optional[list[float]] = None
+    response_length_distribution: Optional[list[float]] = None
+    tool_call_distribution: Optional[dict[str, float]] = None
 
     model_config = {"from_attributes": True}
+
+
+class DriftBaselineCreate(BaseModel):
+    """Payload the drift detector sends when persisting a freshly built baseline."""
+
+    agent_name: str
+    n_samples: int
+    avg_response_length: Optional[float] = None
+    avg_latency_ms: Optional[float] = None
+    avg_token_count: Optional[float] = None
+    embedding_centroid: Optional[list[float]] = None
+    response_length_distribution: Optional[list[float]] = None
+    tool_call_distribution: Optional[dict[str, float]] = None
+
+
+class DriftAlertCreate(BaseModel):
+    """Payload the drift detector sends when posting a detected alert."""
+
+    agent_name: str
+    detected_at: Optional[datetime] = None
+    alert_type: str
+    severity: str = "warning"
+    score: Optional[float] = None
+    threshold: Optional[float] = None
+    description: Optional[str] = None
+
+
+class DriftRebuildRequestResponse(BaseModel):
+    """A pending baseline rebuild request."""
+
+    id: int
+    agent_name: str
+    requested_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class AgentSummary(BaseModel):
+    """An agent observed in stored spans."""
+
+    name: str
+    span_count: int
 
 
 class PaginatedTraces(BaseModel):
