@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+
+from app.timeutil import ensure_utc
 
 # --- Request schemas ---
 
@@ -31,6 +33,12 @@ class SpanEventSchema(BaseModel):
     metadata: dict[str, object] | None = None
     sdk_version: str = "0.1.0"
 
+    @field_validator("started_at", "ended_at")
+    @classmethod
+    def _normalize_utc(cls, value: datetime | None) -> datetime | None:
+        """Store every timestamp as UTC-aware, whatever offset the SDK sent."""
+        return None if value is None else ensure_utc(value)
+
 
 class BatchSpanRequest(BaseModel):
     """Batch of spans from the SDK."""
@@ -46,6 +54,9 @@ class BatchSpanResponse(BaseModel):
     """Response to batch span ingestion."""
 
     accepted: int
+    # Spans skipped because their span_id was already stored. Non-zero is
+    # normal and healthy -- it means an at-least-once retry was deduplicated.
+    duplicates: int = 0
 
 
 class SpanResponse(BaseModel):

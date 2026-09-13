@@ -11,6 +11,7 @@ RUN apt-get update \
 
 # Install dependencies first for better Docker layer caching.
 COPY pyproject.toml ./
+COPY README.md ./
 COPY detector ./detector
 RUN pip install --no-cache-dir .
 

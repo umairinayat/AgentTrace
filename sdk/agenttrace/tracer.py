@@ -177,6 +177,8 @@ class Tracer:
         batch_size: int = 10,
         flush_interval: float = 2.0,
         api_key: str | None = None,
+        max_queue_size: int = 10000,
+        max_retries: int = 3,
     ) -> None:
         """Initialize the tracer with collector connection details.
 
@@ -185,6 +187,9 @@ class Tracer:
             batch_size: Number of events per batch flush.
             flush_interval: Seconds between automatic flushes.
             api_key: Optional API key for authentication.
+            max_queue_size: Maximum events buffered in memory before dropping.
+            max_retries: Consecutive send failures before a batch is spilled to
+                disk (``~/.agenttrace/buffer``) and replayed later.
         """
         if self._initialized:
             logger.warning("Tracer already initialized, re-initializing")
@@ -199,6 +204,8 @@ class Tracer:
             client=self._client,
             batch_size=batch_size,
             flush_interval=flush_interval,
+            max_queue_size=max_queue_size,
+            max_retries=max_retries,
         )
         self._initialized = True
         logger.info("AgentTrace initialized: collector=%s", collector_url)
@@ -338,7 +345,7 @@ class Tracer:
     async def flush(self) -> None:
         """Manually flush all pending events."""
         if self._queue:
-            await self._queue._flush_batch()
+            await self._queue.flush_all()
 
     async def shutdown(self) -> None:
         """Gracefully shutdown the tracer."""
@@ -364,7 +371,9 @@ class Tracer:
         else:
             return  # A loop is running; the async flusher will handle delivery.
 
-        if not self._initialized or self._queue is None or self._queue.pending_count == 0:
+        if not self._initialized or self._queue is None:
+            return
+        if self._queue.pending_count == 0 and not self._queue.has_spill_pending:
             return
 
         try:
@@ -377,9 +386,15 @@ class Tracer:
         self.flush_sync()
 
     async def _drain_pending(self) -> None:
-        """Drain all queued events in a fresh event loop (sync flush path)."""
+        """Drain all queued events in a fresh event loop (sync flush path).
+
+        ``flush_all`` stops at the first failed batch, so a collector that is
+        down cannot spin this loop forever -- the events it could not deliver
+        are spilled to disk by the queue's retry policy.
+        """
         assert self._queue is not None
-        while self._queue.pending_count > 0:
-            await self._queue._flush_batch()
+        await self._queue.flush_all()
+        # Also drain anything a previous run spilled to disk before exiting.
+        await self._queue._replay_spilled()
         if self._client is not None:
             await self._client.close()

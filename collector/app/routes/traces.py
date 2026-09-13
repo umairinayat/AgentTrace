@@ -20,6 +20,7 @@ from app.schemas import (
     TraceDetailResponse,
     TraceResponse,
 )
+from app.timeutil import duration_ms
 
 logger = logging.getLogger(__name__)
 
@@ -79,29 +80,46 @@ async def list_traces(
     offset = (page - 1) * page_size
     query = query.offset(offset).limit(page_size)
 
-    result = await session.execute(query.options(selectinload(Trace.spans)))
-    traces = result.scalars().all()
+    # Span count and the owning agent come from correlated aggregates rather
+    # than eager-loading Trace.spans: the list view needs two scalars per trace,
+    # and selectinload would pull every span's full input/output JSON to get them.
+    span_count_sq = (
+        select(func.count(Span.id))
+        .where(Span.trace_id == Trace.id)
+        .correlate(Trace)
+        .scalar_subquery()
+    )
+    first_agent_sq = (
+        select(Span.agent_name)
+        .where(Span.trace_id == Trace.id)
+        .order_by(Span.started_at.asc())
+        .limit(1)
+        .correlate(Trace)
+        .scalar_subquery()
+    )
 
-    items = []
-    for trace in traces:
-        # Derive agent_name from the first span if available
-        agent_name = None
-        if trace.spans:
-            agent_name = trace.spans[0].agent_name
-        items.append(
-            TraceResponse(
-                id=trace.id,
-                name=trace.name,
-                agent_name=agent_name,
-                started_at=trace.started_at,
-                ended_at=trace.ended_at,
-                duration_ms=trace.duration_ms,
-                total_tokens=trace.total_tokens,
-                total_cost_usd=trace.total_cost_usd,
-                status=trace.status,
-                span_count=len(trace.spans),
-            )
+    result = await session.execute(
+        query.add_columns(
+            span_count_sq.label("span_count"),
+            first_agent_sq.label("first_agent"),
         )
+    )
+
+    items = [
+        TraceResponse(
+            id=trace.id,
+            name=trace.name,
+            agent_name=first_agent,
+            started_at=trace.started_at,
+            ended_at=trace.ended_at,
+            duration_ms=trace.duration_ms,
+            total_tokens=trace.total_tokens,
+            total_cost_usd=trace.total_cost_usd,
+            status=trace.status,
+            span_count=span_count,
+        )
+        for trace, span_count, first_agent in result.all()
+    ]
 
     pages = max(1, (total + page_size - 1) // page_size)
     return PaginatedTraces(
@@ -186,7 +204,7 @@ async def get_trace_timeline(
     timeline_spans = []
 
     for s in trace.spans:
-        start_offset = (s.started_at - trace_start).total_seconds() * 1000
+        start_offset = duration_ms(trace_start, s.started_at)
         duration = s.latency_ms or 0
 
         timeline_spans.append(
